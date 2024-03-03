@@ -55,7 +55,7 @@ def main(wp,bp,depth,custom_fen='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w K
     dragging = False
     selected_square = None
     taken_moves = []
-    bot=SimpleNeuralEngine.Agent(3)
+    bot=SimpleNeuralEngine.Agent(4)
     while running and not board.is_game_over():
 
         if (board.turn == chess.WHITE and wp) or (board.turn == chess.BLACK and bp):
@@ -119,4 +119,4 @@ def main(wp,bp,depth,custom_fen='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w K
     sys.exit()
 
 if __name__ == "__main__":
-    main(0,0,3,'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
+    main(1,0,3,'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')

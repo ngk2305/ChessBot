@@ -39,7 +39,7 @@ if __name__=='__main__':
 
     else:
 
-        data = pd.read_csv(f'processedData/pData_1.csv')
+        data = pd.read_csv(f'processedData/pData_3.csv')
         X = data.drop('Score', axis=1).values
 
 
@@ -54,4 +54,4 @@ if __name__=='__main__':
         data['predictions'] = predictions
 
         # Save the DataFrame with predictions to a new CSV file
-        data.to_csv('predictions_result.csv', index=False)
+        data.to_csv('predictions_result3.csv', index=False)
