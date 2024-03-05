@@ -1,11 +1,10 @@
 import torch
-import NeuralNetwork
+from NeuralNetworks import NeuralNetworkSuper
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 import pandas as pd
 import BitboardExtraction
-import NeuralNetworkSuper
 
 # Define your custom dataset class
 class CustomDataset(Dataset):
@@ -42,7 +41,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 num_epochs = 5
 for j in range(1):
     print(j)
-    data_path = f'/Users/test/Documents/GitHub/ChessBot/ML/processedData/pData_{j+1}.csv'
+    data_path = f'Data/processedData/pData_{j+1}.csv'
     dataset = CustomDataset(data_path)
     dataloader = DataLoader(dataset, batch_size=1  , shuffle=True)
 
@@ -67,5 +66,5 @@ for j in range(1):
         print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}')
 
     # Save the trained model weights
-    torch.save(model.state_dict(), 'super_model_weights.pth')
+    torch.save(model.state_dict(), f'Weights/super_model_weights.pth')
 print('done')

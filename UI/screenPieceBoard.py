@@ -17,7 +17,7 @@ def draw_board(screen):
     for row in range(8):
         for col in range(8):
             square= row+col*8
-            color = 'LightSquare1' if (row + col) % 2 == 0 else 'DarkSquare1'
+            color = 'LightSquare1' if (row + col) % 2 == 1 else 'DarkSquare1'
             filename = f"UI/TexturePack/board/{color}.png"
             piece_image = pygame.image.load(filename)
             piece_image = pygame.transform.scale(piece_image, (SQUARE_SIZE, SQUARE_SIZE))

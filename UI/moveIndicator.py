@@ -34,6 +34,10 @@ def event_scan(board,selected_square,taken_moves,running):
                 if move in board.legal_moves:
                     board.push(move)
                     taken_moves = []
+                elif ((chess.square_rank(square) == 0 or chess.square_rank(square) == 7) and board.piece_at(selected_square).piece_type == 1):
+                    move=promote_pawn(move)
+                    board.push(move)
+                    taken_moves = []
 
                 selected_square = None
 
@@ -62,3 +66,17 @@ def show_piece_move(board,selected_square,screen):
                 square_rect = pygame.Rect(to_file * (SCREEN_SIZE // 8), to_rank * (SCREEN_SIZE // 8),
                                           SCREEN_SIZE // 8, SCREEN_SIZE // 8)
                 pygame.draw.rect(screen, GREY, square_rect, 6)  # RGB color for grey
+
+def promote_pawn(move):
+    promotion_options = ['q', 'r', 'b', 'n']
+
+    while True:
+        promotion_choice = input(
+            "Choose promotion piece (q for queen, r for rook, b for bishop, n for knight): ").lower()
+        if promotion_choice in promotion_options:
+            move.promotion = 5-promotion_options.index(promotion_choice)
+            break
+        else:
+            print("Invalid choice. Please choose q, r, b, or n.")
+
+    return move

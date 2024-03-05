@@ -3,8 +3,8 @@ import chess.svg
 import chess.engine
 
 class Agent():
-    def __init__(self,depth):
-        self.depth= depth
+    def __init__(self):
+        self.dummy=0
 
     def evaluate_board(self,board):
         evaluation = 0
@@ -46,11 +46,11 @@ class Agent():
                 min_eval = min(min_eval, eval)
             return min_eval
 
-    def find_best_move(self,board, depth):
+    def find_best_move(self,board):
         legal_moves = list(board.legal_moves)
         best_move = None
         best_eval = float('-inf')
-
+        depth=3
         for move in legal_moves:
             board.push(move)
             eval = self.minimax(board, depth - 1, False)
@@ -61,3 +61,12 @@ class Agent():
                 best_move = move
 
         return best_move
+
+if __name__=='__main__':
+    custom_fen = '3k4/8/8/8/8/8/8/3KQ3 w - - 0 1'
+    board = chess.Board(fen=custom_fen)
+
+    bot = Agent()
+    eva = bot.evaluate_board(board)
+    print(eva)
+    print(bot.find_best_move(board, 2))
