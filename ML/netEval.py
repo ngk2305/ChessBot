@@ -27,4 +27,4 @@ if __name__=='__main__':
     model = NeuralNetworkSuper.SuperChessEvaluator()
     model.load_state_dict((torch.load(f'Weights/super_model_weights.pth')))
 
-    main('pData_1.csv',model)
+    main('pData_4.csv',model)

@@ -10,7 +10,8 @@ def Load_bot(color):
     choice = input(f'{color} is played by:\n'
                    '0.Human\n'
                    '1.SimpleEngine\n'
-                   '2.SimpleNeuralEngine\n')
+                   '2.SimpleNeuralEngine\n'
+                   '3.SimpleNeuralEngineV2\n')
 
 
     match choice:
@@ -20,6 +21,8 @@ def Load_bot(color):
             folder_name = 'Engines/SimpleEngine'
         case '2':
             folder_name = 'Engines/SimpleNeuralEngine'
+        case '3':
+            folder_name = 'Engines/NeuralEngineV2'
 
     bot_path = Path(folder_name) / 'bot.py'
 

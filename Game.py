@@ -35,11 +35,13 @@ def main(custom_fen='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'):
             selected_square,taken_moves,running = moveIndicator.event_scan(board,selected_square,taken_moves,running)
 
         else:
+            selected_square, taken_moves, running = moveIndicator.event_scan(board, selected_square, taken_moves,
+                                                                             running)
             print('Bot is thinking...')
             if board.turn:
-                move = white_bot.find_best_move(board)
+                move,eval = white_bot.find_best_move(board)
             else:
-                move = black_bot.find_best_move(board)
+                move,eval = black_bot.find_best_move(board)
 
             board.push(move)
 

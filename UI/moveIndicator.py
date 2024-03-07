@@ -34,10 +34,11 @@ def event_scan(board,selected_square,taken_moves,running):
                 if move in board.legal_moves:
                     board.push(move)
                     taken_moves = []
-                elif ((chess.square_rank(square) == 0 or chess.square_rank(square) == 7) and board.piece_at(selected_square).piece_type == 1):
+                elif (((chess.square_rank(square) == 0 and not board.turn and chess.square_rank(selected_square)==1 ) or (chess.square_rank(square) == 7) and board.turn and chess.square_rank(selected_square)==6) and board.piece_at(selected_square).piece_type == 1):
                     move=promote_pawn(move)
-                    board.push(move)
-                    taken_moves = []
+                    if move in board.legal_moves:
+                        board.push(move)
+                        taken_moves = []
 
                 selected_square = None
 

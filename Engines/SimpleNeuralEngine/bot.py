@@ -9,7 +9,7 @@ class Agent():
     def __init__(self):
         self.depth= 3
         self.NN= NeuralNetworkSuper.SuperChessEvaluator()
-        self.NN.load_state_dict(torch.load(f'Engines/SimpleNeuralEngine/super_model_weights.pth'))
+        self.NN.load_state_dict(torch.load(f'Engines/NeuralEngineV2/super_model_weights.pth'))
 
     def evaluate_board(self,board):
         evaluation = 0
@@ -27,7 +27,7 @@ class Agent():
     def minimax_alpha_beta(self, board, depth, alpha, beta, maximizing_player):
 
 
-        if depth == 0 or board.is_game_over():
+        if depth <= 0 or board.is_game_over():
             return self.evaluate_board(board)
 
         legal_moves = list(board.legal_moves)
