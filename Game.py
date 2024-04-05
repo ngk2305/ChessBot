@@ -42,7 +42,7 @@ def main(custom_fen='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'):
                 move,eval = white_bot.find_best_move(board)
             else:
                 move,eval = black_bot.find_best_move(board)
-
+            print(move,eval)
             board.push(move)
 
 
@@ -58,4 +58,4 @@ def main(custom_fen='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'):
 
 if __name__ == "__main__":
     #main('8/k3P3/8/8/8/8/8/4K3 w - - 0 1')
-    main()
+    main('8/5P2/1k6/8/8/8/8/5K2 w - - 0 1')

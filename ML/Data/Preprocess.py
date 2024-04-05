@@ -35,9 +35,9 @@ def data_preprocess(input_file, output_file):
 
 if __name__ == '__main__':
 
-    directory_path = '/Users/test/Documents/GitHub/ChessBot/ML/rawData'
+    directory_path = '/Users/test/Documents/GitHub/ChessBot/ML/Data/rawData'
 
-    output_dir = '/Users/test/Documents/GitHub/ChessBot/ML/processedData'
+    output_dir = '/Users/test/Documents/GitHub/ChessBot/ML/Data/processedData'
 
     for i in range(130):
         file_name = f'miniData_{str(i+1)}.csv'

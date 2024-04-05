@@ -1,14 +1,14 @@
 import chess
 import chess.svg
 import chess.engine
-from Engines.NeuralEngineV2 import BitboardExtraction
+from Engines.NeuralEngineV3 import BitboardExtraction
 import torch
-from Engines.NeuralEngineV2 import NeuralNetworkSuper
+from Engines.NeuralEngineV3 import NEv3
 
 class Agent():
     def __init__(self):
         self.depth= 6
-        self.NN= NeuralNetworkSuper.SuperChessEvaluator()
+        self.NN= NEv3.ChessEvaluator()
         self.NN.load_state_dict(torch.load(f'Engines/NeuralEngineV2/super_model_weights.pth'))
 
     def evaluate_board(self,board):
@@ -106,7 +106,7 @@ if __name__== '__main__':
     evaluation_count=0
     new_bot = Agent()
 
-    new_net= NeuralNetworkSuper.SuperChessEvaluator()
+    new_net= NEv3.ChessEvaluator()
     evaluation = new_net(torch.tensor(BitboardExtraction.get_bit_board(board), dtype=torch.float32))
 
 

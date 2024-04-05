@@ -5,6 +5,7 @@ import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 import pandas as pd
 import BitboardExtraction
+import tqdm as tqdm
 
 # Define your custom dataset class
 class CustomDataset(Dataset):
@@ -38,10 +39,10 @@ optimizer = optim.Adam(model.parameters(), lr=0.0001)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Training loop
-num_epochs = 5
+num_epochs = 1
 for j in range(1):
     print(j)
-    data_path = f'Data/processedData/pData_{j+1}.csv'
+    data_path = f'Data/processedData3/pData_{j+1}.csv'
     dataset = CustomDataset(data_path)
     dataloader = DataLoader(dataset, batch_size=1  , shuffle=True)
 
