@@ -9,7 +9,7 @@ class Agent():
     def __init__(self):
         self.depth= 6
         self.NN= NEv3.ChessEvaluator()
-        self.NN.load_state_dict(torch.load(f'Engines/NeuralEngineV2/super_model_weights.pth'))
+        self.NN.load_state_dict(torch.load(f'Engines/NeuralEngineV3/NEv3.pth'))
 
     def evaluate_board(self,board):
         evaluation = 0
@@ -24,10 +24,10 @@ class Agent():
                     evaluation=1
         return evaluation
 
-    def minimax_alpha_beta(self, board, depth, alpha, beta, maximizing_player):
+    def minimax_alpha_beta(self, board, probability, alpha, beta, maximizing_player):
 
 
-        if depth <= 0 or board.is_game_over():
+        if probability <= 0.00002 or board.is_game_over():
             return self.evaluate_board(board)
 
         legal_moves = list(board.legal_moves)
@@ -36,7 +36,7 @@ class Agent():
             max_eval = 0
             for move in legal_moves:
                 board.push(move)
-                eval = self.minimax_alpha_beta(board, depth - 1, alpha, beta, False)
+                eval = self.minimax_alpha_beta(board, probability/len(legal_moves), alpha, beta, False)
                 board.pop()
                 max_eval = max(max_eval, eval)
                 alpha = max(alpha, eval)
@@ -47,7 +47,7 @@ class Agent():
             min_eval = 1
             for move in legal_moves:
                 board.push(move)
-                eval = self.minimax_alpha_beta(board, depth - 1, alpha, beta, True)
+                eval = self.minimax_alpha_beta(board, probability/len(legal_moves), alpha, beta, True)
                 board.pop()
                 min_eval = min(min_eval, eval)
                 beta = min(beta, eval)
@@ -63,7 +63,7 @@ class Agent():
             max_eval = 0
             for move in legal_moves:
                 board.push(move)
-                eval = self.minimax_alpha_beta(board, self.depth - 1, 0, 1, False)
+                eval = self.minimax_alpha_beta(board, 1, 0, 1, False)
                 board.pop()
                 if eval > max_eval:
                     max_eval = eval
@@ -74,7 +74,7 @@ class Agent():
             min_eval = 1
             for move in legal_moves:
                 board.push(move)
-                eval = self.minimax_alpha_beta(board, self.depth - 1, 0,1, True)
+                eval = self.minimax_alpha_beta(board, 1, 0,1, True)
                 board.pop()
                 if eval < min_eval:
                     min_eval = eval

@@ -1,56 +1,73 @@
 import pandas as pd
 import torch
-import BitboardExtraction
-from NeuralNetworks import NeuralNetworkSuper
+import os
+import importlib.util
+from torch.utils.data import Dataset, DataLoader
+from tqdm import tqdm
 import numpy as np
-import matplotlib.pyplot as plt
+# Define your custom dataset class
+class CustomDataset(Dataset):
+    def __init__(self, data_dict):
+        self.A = data_dict['Bitboard']
+        self.B = data_dict['Xtra']
+        self.C = data_dict['Score']
+        self.length = len(self.A)
+
+    def __len__(self):
+        return self.length
+
+    def __getitem__(self, idx):
+        # Concatenate values from A and B
+        A_value = self.A[idx]
+        B_value = self.B[idx]
+        board = [A_value, B_value]
+        score = self.C[idx]
+        return board, score
 
 def main(datafile,model):
 
-    data = pd.read_csv(f'Data/processedData3/{datafile}')
-    X = data.drop('Score', axis=1).values
+    data_dict = torch.load(datafile)
+    dataset = CustomDataset(data_dict)
+    dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
 
-
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    true_eval = []
     predictions = []
+    model.eval()
     with torch.no_grad():
-        for inputs in X:
-            inputs = torch.tensor(BitboardExtraction.get_bit_fen_batch(inputs), dtype=torch.float32)
-            output = model(inputs)
-            predictions.append(output.item())
+        for batch in tqdm(dataloader):
+            input, score = batch
+            board = torch.Tensor(input[0])
+            xtra = torch.Tensor(input[1])
+            score = score.float()
 
-        # Add the predictions to the DataFrame
-    data['predictions'] = predictions
+            board, score = board.to(device), score.to(device)
+            # Forward pass
+            outputs = model(board, xtra)
 
-    # Create subplots for each distribution
-    plt.figure(figsize=(12, 6))
+            true_eval.append(score.item())
+            predictions.append(outputs.item())
 
-    plt.subplot(1, 2, 1)
-    plt.hist(data['Score'], bins=20, color='blue', alpha=0.7)
-    plt.title('Distribution of Score')
+            # Create a DataFrame from the two lists
+    df = pd.DataFrame({
+            'Eval': true_eval,
+            'Pred': predictions
+        })
 
-    plt.subplot(1, 2, 2)
-    plt.hist(data['predictions'], bins=20, color='green', alpha=0.7)
-    plt.title('Distribution of Pred')
 
-    plt.tight_layout()
-    plt.show()
-
-    squared_diff = (data['Score'] - data['predictions']) ** 2
-
-    # Calculate the mean squared error
-    mse = squared_diff.mean()
-
-    # Calculate the root mean squared error
-    rmse = np.sqrt(mse)
-
-    print("Root Mean Squared Error:", rmse)
-
-        # Save the DataFrame with predictions to a new CSV file
-    datafile = datafile.replace('.csv', "")
-    data.to_csv(f'Data/Eval Data/{datafile}_1output_result.csv', index=False)
+    df.to_csv('eval.csv', index=False)
+    average_abs_difference = np.mean(np.abs(np.subtract(true_eval, predictions)))
+    print("Lists saved to eval.csv")
+    print(f"The average of absolute differences is: {average_abs_difference}")
 
 if __name__=='__main__':
-    model = NeuralNetworkSuper.SuperChessEvaluator()
-    model.load_state_dict((torch.load(f'Weights/super_model_weights.pth')))
+    model_name = 'NEv5'
+    module_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'NeuralNetworks', model_name + '.py'))
+    spec = importlib.util.spec_from_file_location(model_name, module_path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    model = module.ChessEvaluator()
 
-    main('pData_20.csv',model)
+    model.load_state_dict((torch.load(f'Weights/{model_name}_weights.pth')))
+
+    main(f'Data/processedData4/pData_48.pth',model)

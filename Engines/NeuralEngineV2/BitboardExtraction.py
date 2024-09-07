@@ -49,5 +49,5 @@ def get_bit_fen_batch(batch):
 
 if __name__=='__main__':
     board=chess.Board(fen='r4rk1/1p2qppp/8/pb1PN3/3Q2n1/P1R5/1P1N2BP/R5K1 b - - 0 26')
-    print(get_bit_board(board))
+    print(torch.tensor(get_bit_board(board)))
     print(get_bit_fen('r4rk1/1p2qppp/8/pb1PN3/3Q2n1/P1R5/1P1N2BP/R5K1 b - - 0 26'))

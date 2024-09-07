@@ -16,6 +16,16 @@ rook_bitboard = board.pieces(chess.ROOK, chess.WHITE)
 queen_bitboard = board.pieces(chess.QUEEN, chess.WHITE)
 king_bitboard = board.pieces(chess.KING, chess.WHITE)
 
+
+def flatten_list(lst):
+    flattened = []
+    for item in lst:
+        if isinstance(item, list):
+            flattened.extend(flatten_list(item))
+        else:
+            flattened.append(item)
+    return flattened
+
 # Custom function to print bitboards
 def print_bitboard(bitboard):
     for rank in range(7, -1, -1):
@@ -29,11 +39,15 @@ def split_bits(n):
     return [(n >> i) & 1 for i in range(63, -1, -1)]
 def get_bit_board(board):
     input=[]
+    side_to_move = int(board.turn)
     for i in chess.COLORS:
         for j in chess.PIECE_TYPES:
             bitboard = split_bits(board.pieces(j,i))
             input.append(bitboard)
-    return input
+
+    input.append(side_to_move)
+
+    return flatten_list(input)
 
 def get_bit_fen(fen):
     return get_bit_board(chess.Board(fen=fen))

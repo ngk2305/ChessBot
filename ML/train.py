@@ -1,11 +1,12 @@
 import torch
-from NeuralNetworks import NeuralNetworkSuper
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 import pandas as pd
 import BitboardExtraction
 import tqdm as tqdm
+import importlib.util
+import os
 
 # Define your custom dataset class
 class CustomDataset(Dataset):
@@ -27,28 +28,32 @@ class CustomDataset(Dataset):
         sample = {'fen': fen, 'score': torch.tensor(score, dtype=torch.float)}
         return sample
 
+# Import Neural Network
 
-
-# Instantiate your dataset and dataloader
-
+module_name = 'NEv4'
+module_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'NeuralNetworks', module_name+'.py'))
+spec = importlib.util.spec_from_file_location(module_name, module_path)
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
 
 # Instantiate your model, loss function, and optimizer
-model = NeuralNetworkSuper.SuperChessEvaluator()
+model = module.ChessEvaluator()
 criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=0.0001)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Training loop
-num_epochs = 1
-for j in range(1):
+num_epochs = 10
+dataFolder = 3
+print('checkpoint')
+model.train()
+for j in range(5):
     print(j)
-    data_path = f'Data/processedData3/pData_{j+1}.csv'
+    data_path = f'Data/processedData{dataFolder}/pData_{j}.csv'
     dataset = CustomDataset(data_path)
-    dataloader = DataLoader(dataset, batch_size=1  , shuffle=True)
-
+    dataloader = DataLoader(dataset, batch_size=8  , shuffle=True)
 
     for epoch in range(num_epochs):
-        print(epoch)
         for batch in dataloader:
             fen = batch['fen']
             score = batch['score']
@@ -67,5 +72,6 @@ for j in range(1):
         print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}')
 
     # Save the trained model weights
-    torch.save(model.state_dict(), f'Weights/super_model_weights.pth')
+    torch.save(model.state_dict(), f'Weights/{module_name}_weights.pth')
+    print('model saved')
 print('done')

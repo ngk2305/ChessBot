@@ -58,4 +58,4 @@ def main(custom_fen='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'):
 
 if __name__ == "__main__":
     #main('8/k3P3/8/8/8/8/8/4K3 w - - 0 1')
-    main('8/5P2/1k6/8/8/8/8/5K2 w - - 0 1')
+    main()
