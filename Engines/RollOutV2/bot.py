@@ -15,19 +15,24 @@ class Agent:
         if not board.is_checkmate():
             return eval.eval(board)
         else:
-            if not board.is_stalemate():
+            if board.is_stalemate() or board.can_claim_draw() or board.is_insufficient_material():
+                return 0.5
+            else:
                 if board.turn:
                     return 0+depth*0.001
                 else:
                     return 1-depth*0.001
 
 
-    def minimax_alpha_beta(self, board, probability, alpha, beta, maximizing_player, depth):
 
+    def minimax_alpha_beta(self, board, probability, alpha, beta, maximizing_player, depth):
+        PV = []
         if self.table.lookup(board) is not None:
             prob, score, flag, best_move, principle_variation = self.table.lookup(board)
             if probability <= prob:
                 return principle_variation, best_move, score
+            else:
+                PV = principle_variation
 
         if probability <= 0.000002 or board.is_game_over():
             eval = self.evaluate_board(board, depth)
@@ -100,19 +105,21 @@ class Agent:
 
     def find_best_move(self, board):
         if board.turn == chess.WHITE:
-            return self.minimax_alpha_beta(board, 1, 0, 1, True, 0)
+            PV_dummy, best_move, eval = self.minimax_alpha_beta(board, 1, 0.03, 0.97, True, 0)
+            return best_move, eval
         else:
-            return self.minimax_alpha_beta(board, 1, 0, 1, False, 0)
+            PV_dummy, best_move, eval = self.minimax_alpha_beta(board, 1, 0.03, 0.97, False, 0)
+            return best_move, eval
 
 
 if __name__ == '__main__':
-    custom_fen = '6k1/3qp1b1/p2p2p1/5B2/4nP2/4B2Q/2P5/1K4RR b - - 0 29'
+    custom_fen = '7k/8/8/6Q1/8/8/8/5K2 b - - 27 14'
     board = chess.Board(fen=custom_fen)
     bot = Agent()
 
 
     while not board.is_game_over():
-        PV,move, evaluation = bot.find_best_move(board)
-        print(PV, move, evaluation)
+        move, evaluation = bot.find_best_move(board)
+        print(move, evaluation)
         board.push(move)
 

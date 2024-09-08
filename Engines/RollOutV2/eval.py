@@ -225,13 +225,13 @@ def eval_dark_pawn(i, pawn_rank):
 
 def eval_rescale(evaluation):
 	evaluation = int(evaluation) / 100
-	if evaluation > 6:
+	if evaluation > 5:
 		score = 1
-	elif evaluation < -6:
+	elif evaluation < -5:
 		score = 0
 	else:
 		score = 1 / (1 + math.exp(-0.8 * evaluation))
-	return score
+	return score*0.94+0.03
 
 if __name__ == '__main__':
 	start_time = time.time()
