@@ -1,32 +1,40 @@
 import chess
 import chess.svg
 import chess.engine
-from Engines.RollOutV2 import eval
+from Engines.RollOutV2 import eval as e
 from Engines.RollOutV2 import Transposition
 from Engines.RollOutV2 import Search
+import chess.syzygy
 
 
 class Agent:
     def __init__(self):
         self.table = Transposition.TranspositionTable()
         self.dummy = 0
+        self.tablebase = chess.syzygy.open_tablebase("/Users/test/Documents/GitHub/ChessBot/Engines/RollOutV2/syzygy")
 
     def evaluate_board(self, board, depth):
-        if not board.is_checkmate():
-            return eval.eval(board)
-        else:
-            if board.is_stalemate() or board.can_claim_draw() or board.is_insufficient_material():
-                return 0.5
-            else:
-                if board.turn:
-                    return 0+depth*0.001
-                else:
-                    return 1-depth*0.001
-
+        return e.eval(board)
 
 
     def minimax_alpha_beta(self, board, probability, alpha, beta, maximizing_player, depth):
         PV = []
+
+        if board.is_game_over():
+            if board.is_checkmate():
+                if board.turn:
+                    return [], None,0 + depth * 0.001
+                else:
+                    return [], None,1 - depth * 0.001
+            else:
+                if board.is_stalemate() or board.can_claim_draw() or board.is_insufficient_material():
+                    return [], None,0.5
+
+        if len(board.piece_map()) <= 5:
+            PV, best_move, eval = e.endgameEval(board, self.tablebase)
+            self.table.store(board, 1, eval, "EXACT", best_move, PV)
+            return PV, best_move, eval
+
         if self.table.lookup(board) is not None:
             prob, score, flag, best_move, principle_variation = self.table.lookup(board)
             if probability <= prob:
@@ -34,7 +42,7 @@ class Agent:
             else:
                 PV = principle_variation
 
-        if probability <= 0.000002 or board.is_game_over():
+        if probability <= 0.000002:
             eval = self.evaluate_board(board, depth)
             self.table.store(board, probability, eval, "EXACT", None, [])
             return [], None, eval
@@ -43,7 +51,6 @@ class Agent:
         if maximizing_player:
             max_eval = -0.1
             best_move = None
-            PV = []
             move_tried = []
             for move, prob in zip(move_list, prob_list):
                 move_tried.append(move)
@@ -69,14 +76,14 @@ class Agent:
 
 
                 board.pop()
-            PV.append(best_move)
+            if best_move is not None:
+                PV.append(best_move)
             self.table.store(board, probability, max_eval, "EXACT", best_move, PV)
 
             return PV,best_move, max_eval
         else:
             min_eval = 1.1
             best_move = None
-            PV = []
             move_tried = []
             for move, prob in zip(move_list, prob_list):
                 move_tried.append(move)
@@ -88,10 +95,14 @@ class Agent:
                     min_eval = eval
                     best_move = move
                     PV = PV_temp
-                    for i in range(len(PV) -2, -1, -2):
-                        if (PV[i] in move_list) & (PV[i] not in move_tried):
-                            Search.ReArrange(move_list, PV[i], move)
+                    try:
+                        for i in range(len(PV) -2, -1, -2):
+                            if (PV[i] in move_list) & (PV[i] not in move_tried):
+                                Search.ReArrange(move_list, PV[i], move)
 
+                    except:
+                        print(PV)
+                        print(type(PV))
                 beta = min(beta, eval)
                 if beta <= alpha:
                     self.table.store(board, new_prob, eval, "BETA", None, PV)
@@ -99,7 +110,8 @@ class Agent:
                     break  # Prune remaining branches
                 board.pop()
 
-            PV.append(best_move)
+            if best_move is not None:
+                PV.append(best_move)
             self.table.store(board, probability, min_eval, "EXACT", best_move, PV)
             return PV, best_move, min_eval
 
@@ -113,13 +125,16 @@ class Agent:
 
 
 if __name__ == '__main__':
-    custom_fen = '7k/8/8/6Q1/8/8/8/5K2 b - - 27 14'
+    custom_fen = '8/R1p2R1p/2k1p1p1/2p2b2/5P2/4K1P1/P6P/3r4 b - - 0 32'
     board = chess.Board(fen=custom_fen)
     bot = Agent()
 
+    move, evaluation = bot.find_best_move(board)
+    print(move, evaluation)
 
-    while not board.is_game_over():
-        move, evaluation = bot.find_best_move(board)
-        print(move, evaluation)
-        board.push(move)
+    #while not board.is_game_over():
+        #move, evaluation = bot.find_best_move(board)
+        #print(move, evaluation)
+        #board.push(move)
+
 

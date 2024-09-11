@@ -1,6 +1,6 @@
 import chess
 import math
-
+import chess.syzygy
 
 
 def simpleMoveOrder(board,alpha):
@@ -70,7 +70,8 @@ def AllEqual(board):
     prob = [1/len(legal_moves) for _ in range(len(legal_moves))]
     return legal_moves, prob
 
+
 if __name__ == '__main__':
-    board = chess.Board(fen='6k1/8/5K2/8/8/8/8/8 w - - 0 11')
+    board = chess.Board(fen='8/R1p2R1p/2k1p1p1/2p2b2/5P2/4K1P1/P6P/3r4 b - - 0 32')
     move , prob = simpleMoveOrder(board,0.99)
     print(move)
