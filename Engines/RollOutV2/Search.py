@@ -1,4 +1,3 @@
-import chess
 import math
 import chess.syzygy
 

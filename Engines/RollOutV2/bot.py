@@ -125,16 +125,15 @@ class Agent:
 
 
 if __name__ == '__main__':
-    custom_fen = '8/R1p2R1p/2k1p1p1/2p2b2/5P2/4K1P1/P6P/3r4 b - - 0 32'
+    custom_fen = 'r1r2bk1/3B1p1p/3p2p1/3P2P1/5p1P/Pp1N1P2/1PqQ4/K2RR3 b - - 0 1'
     board = chess.Board(fen=custom_fen)
     bot = Agent()
 
-    move, evaluation = bot.find_best_move(board)
-    print(move, evaluation)
 
-    #while not board.is_game_over():
-        #move, evaluation = bot.find_best_move(board)
-        #print(move, evaluation)
-        #board.push(move)
+
+    while not board.is_game_over():
+        move, evaluation = bot.find_best_move(board)
+        print(move, evaluation)
+        board.push(move)
 
 
