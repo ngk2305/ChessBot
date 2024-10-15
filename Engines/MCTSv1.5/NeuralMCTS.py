@@ -3,9 +3,10 @@ import random
 import pickle
 import eval
 import chess
+from tqdm import tqdm
 import getBoard
 import torch
-import time
+import chess_utils
 from MCNet import ChessEvaluator
 
 class Node:
@@ -16,7 +17,6 @@ class Node:
         self.visits = 0  # Number of times node has been visited
         self.score = 0  # Number of wins from this node
         self.nn_predictor = nn_pred
-        self.searching = True
 
     def add_child(self, child_state):
         child_node = Node(child_state, self.nn_predictor, self)
@@ -32,26 +32,19 @@ class Node:
             return math.inf  # Assign infinite value if never visited
         return (self.score / self.visits) + exploration_param * math.sqrt(math.log(self.parent.visits) / self.visits)
 
-    def set_searching(self,value):
-        self.searching = value
-
-    def search(self, num_simulations,time_limit_seconds ,fen):
-        best_move = None
-        start_time = time.time()
-        self.set_searching(True)
-
-        while self.searching:
+    def search(self, num_simulations, fen):
+        for _ in tqdm(range(num_simulations)):
             node = self._select(self, fen)
             result = node._simulate(fen)
             self._backpropagate(node, result)
-            best_move = max(self.children, key=lambda child: child.score/child.visits)
 
-            elapsed_time = time.time() - start_time  # Calculate elapsed time
-            if elapsed_time >= time_limit_seconds:
-                self.searching = False  # Stop searching after time limit
+        for child in self.children:
+            print(child.board)
+            print(child.score/child.visits)
+            print(child.visits)
+        # Randomly select a child based on the weights
 
-
-        return best_move
+        return max(self.children, key=lambda child: child.visits)
 
     def _select(self, node, fen):
         while node.children:
@@ -88,12 +81,10 @@ class Node:
         board = self._get_board(fen)
 
         while not board.is_game_over() and (counter <= 20):
-            main_board = torch.Tensor(getBoard.get_bit_board(board),device=torch.device('cuda'))
-            xtra_info = torch.Tensor(getBoard.get_info_board(board), device=torch.device('cuda'))
-            (p_from, p_to), val = self.nn_predictor(main_board, xtra_info)
+            (p_from, p_to), val = self.nn_predictor(torch.Tensor(getBoard.get_bit_board(board)), torch.Tensor(getBoard.get_info_board(board)))
             p_from = torch.softmax(p_from, dim=1)
             p_to = torch.softmax(p_to, dim=1)
-            move = self.sample_move_from_policy(self.calculate_policy_map(p_from, p_to, list(board.legal_moves)))
+            move = self.sample_move_from_policy(self.calculate_policy_map(p_from, p_to, list(board.legal_moves), board))
             board.push(move)
             counter += 1
         if (counter > 20):
@@ -130,8 +121,9 @@ class Node:
         """
         self.nn_predictor = nn_predictor
 
-    def calculate_policy_map(self, P_from, P_to, legal_moves):
+    def calculate_policy_map(self, P_from, P_to, legal_moves, board):
         policy_map = {}
+        board = board
         # Loop through each legal move
         for move in legal_moves:
             from_sq = move.from_square
@@ -147,7 +139,7 @@ class Node:
         total_sum = sum(policy_map.values())
         for move in policy_map:
             policy_map[move] /= total_sum
-        policy_map = dict(sorted(policy_map.items(), key=lambda item: item[1], reverse=True))
+
         return policy_map
 
 
@@ -168,7 +160,7 @@ def run_and_save_mcts():
             node = pickle.load(file)
     except:
         node = Node(None)
-    node.search(num_simulations=1000,time_limit_seconds=20,fen='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
+    node.search(num_simulations=1000, fen='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
     j = 0
     for i in node.children:
         print(i.board)
@@ -184,9 +176,9 @@ def run_and_save_mcts():
 
 
 if __name__ == '__main__':
-    board = chess.Board(fen='r3k2r/1ppbqpp1/p1n1p2p/8/3PN1n1/2PB1NP1/PP2QPP1/2KR3R w kq - 1 14')
+    board = chess.Board(fen='rnbqkb1r/ppp2ppp/4pn2/3p4/2PP4/5N2/PP2PPPP/RNBQKB1R w KQkq - 0 4')
     nn_predictor = ChessEvaluator()
-    nn_predictor.load_state_dict(torch.load('epoch29.pth'))
+    nn_predictor.load_state_dict(torch.load('current.pth', map_location=torch.device('cpu')))
     node = Node(board, nn_predictor)
     (p_piece, p_move), val = nn_predictor(torch.Tensor(getBoard.get_bit_board(board)),
                                              torch.Tensor(getBoard.get_info_board(board)))
@@ -195,9 +187,10 @@ if __name__ == '__main__':
     print(p_piece)
     p_move = torch.softmax(p_move, dim=1)
     print(p_move)
-    pol = node.calculate_policy_map(p_piece, p_move, list(board.legal_moves))
+    pol = node.calculate_policy_map(p_piece, p_move, list(board.legal_moves), board)
     print(pol)
+    print(pol.get(chess.Move.from_uci('f3e5')))
     move = node.sample_move_from_policy(pol)
     print(move)
-    print(val)
+
 

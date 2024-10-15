@@ -25,18 +25,18 @@ class PolicyHead(nn.Module):
         super(PolicyHead, self).__init__()
         self.conv = nn.Conv2d(in_channels, 2, kernel_size=1)  # 1x1 conv layer
         self.bn = nn.BatchNorm2d(2)
-        self.fc_from = nn.Linear(2 * board_size * board_size+5, board_size * board_size)
-        self.fc_to = nn.Linear(2 * board_size * board_size+5, board_size * board_size)
+        self.fc_from = nn.Linear(2 * board_size * board_size, board_size * board_size)
+        self.fc_to = nn.Linear(2 * board_size * board_size, board_size * board_size)
 
     def forward(self, x, x2):
         pol_from = F.relu(self.bn(self.conv(x)))
         pol_from = pol_from.view(pol_from.size(0), -1)  # Flatten
-        pol_from = torch.cat((pol_from, x2), dim=1)
+
         pol_from = self.fc_from(pol_from)
 
         pol_to = F.relu(self.bn(self.conv(x)))
         pol_to = pol_to.view(pol_to.size(0), -1)  # Flatten
-        pol_to = torch.cat((pol_to, x2), dim=1)
+
         pol_to = self.fc_from(pol_to)
         return pol_from, pol_to
 
@@ -45,13 +45,13 @@ class ValueHead(nn.Module):
         super(ValueHead, self).__init__()
         self.conv = nn.Conv2d(in_channels, 1, kernel_size=1)  # 1x1 conv layer
         self.bn = nn.BatchNorm2d(1)
-        self.fc1 = nn.Linear(board_size * board_size+5, 256)
+        self.fc1 = nn.Linear(board_size * board_size, 256)
         self.fc2 = nn.Linear(256, 1)  # Scalar output
 
     def forward(self, x, x2):
         x = F.relu(self.bn(self.conv(x)))
         x = x.view(x.size(0), -1)  # Flatten
-        x = torch.cat((x, x2), dim=1)
+
         x = F.relu(self.fc1(x))
         return torch.sigmoid(self.fc2(x))  # Scalar in range [-1, 1]
 
@@ -89,10 +89,9 @@ class ChessEvaluator(nn.Module):
 
 
 if __name__ == '__main__':
-    board = chess.Board(fen='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
+    board = chess.Board(fen='rnbqkb1r/ppp2ppp/4pn2/3p4/2PP4/5N2/PP2PPPP/RNBQKB1R w KQkq - 0 4')
     test= ChessEvaluator()
-    test.load_state_dict(torch.load('epoch37.pth'))
-    print(sum(p.numel() for p in test.parameters()))
+    test.load_state_dict(torch.load('current.pth',map_location=torch.device('cpu')))
     start_time= time.time()
     for i in range(1):
         evaluation = test(torch.Tensor(getBoard.get_bit_board(board)), torch.Tensor(getBoard.get_info_board(board)))

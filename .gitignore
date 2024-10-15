@@ -4,3 +4,7 @@ processedData/
 Data/
 syzygy/
 data/
+*.pth
+.pth
+.pgn
+*.pgn

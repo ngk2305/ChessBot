@@ -69,6 +69,11 @@ def load_games_from_json(json_file):
 class MCTS_Train:
     def __init__(self):
         self.net = MCNet.ChessEvaluator()
+        try:
+            self.net.load_state_dict(torch.load(f'current.pth'))
+        except:
+            print("Current not found")
+
         self.episodes = 0
         self.score = 0
 
@@ -86,24 +91,16 @@ class MCTS_Train:
 
     def train_supervised(self):
         if torch.cuda.is_available():
-            device = torch.device("cuda")  # Use the first CUDA device
-            print('cuda found')
+            device = torch.device("cuda:0")  # Use the first CUDA device
+
         else:
             device = torch.device("cpu")  # Fallback to CPU if CUDA is not available
 
-        self.net.to(torch.device("cuda:0"))
-
+        self.net.to(device)
         criterion_move = nn.CrossEntropyLoss() # For move prediction (multi-class classification)
         criterion_eval = nn.MSELoss()
         optimizer = optim.Adam(self.net.parameters(), lr=0.0001)
-        start_epoch = 50
-        try:
-            self.net.load_state_dict(torch.load(f'epoch{start_epoch-1}.pth'))
-        except:
-            print('Cant find any old weights')
-        print('Training for 20')
-        for i in range(start_epoch,start_epoch+15):
-            print(f"Training Epoch number {i}")
+        for i in range(5):
             json_file = f"data/game_output{i}.json"
             games_data = load_games_from_json(json_file)
             chess_dataset = ChessDataset(games_data, simple_evaluation_func)
@@ -114,24 +111,23 @@ class MCTS_Train:
                 for batch in tqdm(data_loader):
                     optimizer.zero_grad()
                     board_states, moves, evaluations= batch
-                    evaluations = torch.tensor(evaluations,device=torch.device('cuda'))
-                    main_board = torch.tensor(board_states[0],device=torch.device('cuda'))
-                    xtra_info = torch.tensor(board_states[1], device=torch.device('cuda'))
-                    
-                    label_from = torch.tensor([move[0] for move in moves],device=torch.device('cuda'))
-                    label_to = torch.tensor([move[1] for move in moves],device=torch.device('cuda'))
+                    main_board = board_states[0]
+                    xtra_info = board_states[1]
+                    main_board.to(device)
+                    xtra_info.to(device)
 
+                    label_from = torch.tensor([move[0] for move in moves])
+                    label_to = torch.tensor([move[1] for move in moves])
+                    label_from.to(device)
+                    label_to.to(device)
 
                     (model_from, model_to), eval = self.net(main_board,xtra_info)
-                    print(criterion_move(model_from, label_from))
-                    print(criterion_eval(evaluations,eval))
                     loss = criterion_move(model_from, label_from)+ criterion_move(model_to, label_to)+ criterion_eval(evaluations,eval)
 
 
                     loss.backward()
                     optimizer.step()
-            torch.save(self.net.state_dict(), f'epoch{i}.pth')
-            print(f'model saved to epoch{i}.pth')
+            torch.save(self.net.state_dict(), 'current.pth')
 
     def train_self_play(self):
         running = True

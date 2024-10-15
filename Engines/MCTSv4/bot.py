@@ -1,6 +1,6 @@
 import chess
 import threading
-import MCNet
+import MCNetMini
 import torch
 import NeuralMCTS
 

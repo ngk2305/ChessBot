@@ -6,7 +6,7 @@ import chess
 import getBoard
 import torch
 import time
-from MCNet import ChessEvaluator
+from MCNetMini import ChessEvaluator
 
 class Node:
     def __init__(self, board, nn_pred, parent=None):
@@ -184,11 +184,14 @@ def run_and_save_mcts():
 
 
 if __name__ == '__main__':
-    board = chess.Board(fen='r3k2r/1ppbqpp1/p1n1p2p/8/3PN1n1/2PB1NP1/PP2QPP1/2KR3R w kq - 1 14')
+    board = chess.Board(fen='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
     nn_predictor = ChessEvaluator()
-    nn_predictor.load_state_dict(torch.load('epoch29.pth'))
+    try:
+        nn_predictor.load_state_dict(torch.load('epoch24.pth'))
+    except:
+        print('cant load')
     node = Node(board, nn_predictor)
-    (p_piece, p_move), val = nn_predictor(torch.Tensor(getBoard.get_bit_board(board)),
+    p_piece, p_move = nn_predictor(torch.Tensor(getBoard.get_bit_board(board)),
                                              torch.Tensor(getBoard.get_info_board(board)))
 
     p_piece = torch.softmax(p_piece, dim=1)
@@ -199,5 +202,5 @@ if __name__ == '__main__':
     print(pol)
     move = node.sample_move_from_policy(pol)
     print(move)
-    print(val)
+
 

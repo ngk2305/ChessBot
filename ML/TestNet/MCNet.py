@@ -89,9 +89,9 @@ class ChessEvaluator(nn.Module):
 
 
 if __name__ == '__main__':
-    board = chess.Board(fen='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
+    board = chess.Board(fen='r3k2r/1ppbqpp1/p1n1p2p/8/3PN1n1/2PB1NP1/PP2QPP1/2KR3R w kq - 1 14')
     test= ChessEvaluator()
-    test.load_state_dict(torch.load('epoch37.pth'))
+    test.load_state_dict(torch.load('epoch4.pth',map_location=torch.device('cpu')))
     print(sum(p.numel() for p in test.parameters()))
     start_time= time.time()
     for i in range(1):

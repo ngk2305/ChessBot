@@ -184,11 +184,15 @@ def run_and_save_mcts():
 
 
 if __name__ == '__main__':
-    board = chess.Board(fen='r3k2r/1ppbqpp1/p1n1p2p/8/3PN1n1/2PB1NP1/PP2QPP1/2KR3R w kq - 1 14')
+    board = chess.Board(fen='2kr3r/1bpq1ppp/ppn1pn2/3p4/3P4/2PBPNP1/PP1NQPP1/2KR3R w - - 8 12')
     nn_predictor = ChessEvaluator()
-    nn_predictor.load_state_dict(torch.load('epoch29.pth'))
+    nn_predictor.eval()
+    try:
+        nn_predictor.load_state_dict(torch.load('epoch8.pth'))
+    except:
+        print('cant load')
     node = Node(board, nn_predictor)
-    (p_piece, p_move), val = nn_predictor(torch.Tensor(getBoard.get_bit_board(board)),
+    p_piece, p_move = nn_predictor(torch.Tensor(getBoard.get_bit_board(board)),
                                              torch.Tensor(getBoard.get_info_board(board)))
 
     p_piece = torch.softmax(p_piece, dim=1)
@@ -199,5 +203,5 @@ if __name__ == '__main__':
     print(pol)
     move = node.sample_move_from_policy(pol)
     print(move)
-    print(val)
+
 

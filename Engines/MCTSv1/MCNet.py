@@ -53,9 +53,9 @@ class ChessEvaluator(nn.Module):
 if __name__ == '__main__':
     board = chess.Board(fen='rnbqkb1r/ppp2ppp/4pn2/3p4/2PP4/5N2/PP2PPPP/RNBQKB1R w KQkq - 0 4')
     test= ChessEvaluator()
-    print(sum(p.numel() for p in test.parameters()))
+    print(test.parameters())
     try:
-        test.load_state_dict(torch.load('current.pth'))
+        test.load_state_dict(torch.load('epoch8.pth'))
     except:
         print('cant load')
     start_time= time.time()

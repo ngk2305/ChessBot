@@ -1,12 +1,11 @@
 import math
 import random
-import pickle
 import eval
 import chess
 import getBoard
 import torch
 import time
-from MCNet import ChessEvaluator
+from MCNetMini import ChessEvaluator
 
 class Node:
     def __init__(self, board, nn_pred, parent=None):
@@ -35,21 +34,32 @@ class Node:
     def set_searching(self,value):
         self.searching = value
 
-    def search(self, num_simulations,time_limit_seconds ,fen):
+    def search(self, num_simulations,time_limit_seconds,fen,continual_update):
+
         best_move = None
         start_time = time.time()
         self.set_searching(True)
+        simu_count = 0
+        last_print_time = start_time
 
-        while self.searching:
+        while self.searching and simu_count < num_simulations:
             node = self._select(self, fen)
             result = node._simulate(fen)
             self._backpropagate(node, result)
-            best_move = max(self.children, key=lambda child: child.score/child.visits)
+            best_move = max(
+                (child for child in self.children if child.visits > 0),
+                key=lambda child: child.score / child.visits,
+                default=None  # Provide a fallback value if no children have visits > 0
+            )
+            simu_count += 1
 
             elapsed_time = time.time() - start_time  # Calculate elapsed time
             if elapsed_time >= time_limit_seconds:
                 self.searching = False  # Stop searching after time limit
-
+            if continual_update:
+                if time.time() - last_print_time >= 3:
+                    print(f"Best move after {simu_count} simulations: {best_move.board}")
+                    last_print_time = time.time()  # Update the last print time
 
         return best_move
 
@@ -88,9 +98,9 @@ class Node:
         board = self._get_board(fen)
 
         while not board.is_game_over() and (counter <= 20):
-            main_board = torch.Tensor(getBoard.get_bit_board(board),device=torch.device('cuda'))
-            xtra_info = torch.Tensor(getBoard.get_info_board(board), device=torch.device('cuda'))
-            (p_from, p_to), val = self.nn_predictor(main_board, xtra_info)
+            main_board = torch.tensor(getBoard.get_bit_board(board),device=torch.device('cuda'))
+            xtra_info = torch.tensor(getBoard.get_info_board(board), device=torch.device('cuda'))
+            p_from, p_to = self.nn_predictor(main_board, xtra_info)
             p_from = torch.softmax(p_from, dim=1)
             p_to = torch.softmax(p_to, dim=1)
             move = self.sample_move_from_policy(self.calculate_policy_map(p_from, p_to, list(board.legal_moves)))
@@ -145,8 +155,9 @@ class Node:
 
         # Normalize probabilities
         total_sum = sum(policy_map.values())
+        epsilon = 0.05
         for move in policy_map:
-            policy_map[move] /= total_sum
+            policy_map[move] = ((policy_map[move]/total_sum) + epsilon) / (1 +epsilon*len(policy_map))
         policy_map = dict(sorted(policy_map.items(), key=lambda item: item[1], reverse=True))
         return policy_map
 
@@ -162,33 +173,18 @@ class Node:
         chosen_move = random.choices(moves, probabilities, k=1)[0]
 
         return chosen_move
-def run_and_save_mcts():
-    try:
-        with open('mcts_tree.pkl', 'rb') as file:
-            node = pickle.load(file)
-    except:
-        node = Node(None)
-    node.search(num_simulations=1000,time_limit_seconds=20,fen='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
-    j = 0
-    for i in node.children:
-        print(i.board)
-        j += 1
-        print(j)
-        print('\n')
-    print(node.score)
-    # Save the best node (or tree) using pickle
-    with open('mcts_tree.pkl', 'wb') as f:
-        pickle.dump(node, f)
-
-    print("MCTS tree saved successfully.")
 
 
 if __name__ == '__main__':
-    board = chess.Board(fen='r3k2r/1ppbqpp1/p1n1p2p/8/3PN1n1/2PB1NP1/PP2QPP1/2KR3R w kq - 1 14')
+    board = chess.Board(fen='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
     nn_predictor = ChessEvaluator()
-    nn_predictor.load_state_dict(torch.load('epoch29.pth'))
+    nn_predictor.eval()
+    try:
+        nn_predictor.load_state_dict(torch.load('epoch13.pth'))
+    except:
+        print('cant load')
     node = Node(board, nn_predictor)
-    (p_piece, p_move), val = nn_predictor(torch.Tensor(getBoard.get_bit_board(board)),
+    p_piece, p_move = nn_predictor(torch.Tensor(getBoard.get_bit_board(board)),
                                              torch.Tensor(getBoard.get_info_board(board)))
 
     p_piece = torch.softmax(p_piece, dim=1)
@@ -199,5 +195,5 @@ if __name__ == '__main__':
     print(pol)
     move = node.sample_move_from_policy(pol)
     print(move)
-    print(val)
+
 

@@ -1,15 +1,16 @@
 import chess
 import threading
-import MCNet
+import MCNetMini
 import torch
 import NeuralMCTS
 
 class Agent:
     def __init__(self, version, fen='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'):
-        self.net = MCNet.ChessEvaluator()
+        self.net = (MCNetMini.ChessEvaluator())
+        self.net.to('cuda')
         if version == 'current':
             try:
-                self.net.load_state_dict(torch.load('epoch4.pth', map_location=torch.device('cpu')))
+                self.net.load_state_dict(torch.load('epoch13.pth'))
             except:
                 print("Current not found")
         elif version == 'best':
@@ -25,8 +26,7 @@ class Agent:
         self.searching = True
 
     def find_best_move(self):
-        t = threading.Thread(target=controlled_loop, args=(control_flag,))
-        self.node = self.node.search(100,20,self.starting_fen,self.searching)
+        self.node = self.node.search(30,200,self.starting_fen,True)
         board, eval = self.node.get_move_eval()
         print(f"bestmove {board}")
         return board
